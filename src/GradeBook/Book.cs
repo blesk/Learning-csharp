@@ -63,6 +63,8 @@ namespace GradeBook
             return name;
         }
 
+        public void ChangeName(string name) => this.name = name;
+
         List<double> grades;
         private string name;
     }
