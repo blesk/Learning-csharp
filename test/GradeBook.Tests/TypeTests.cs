@@ -5,14 +5,31 @@ namespace GradeBook.Tests
 {
     public class TypeTests
     {
-       [Fact]
-        public void CanSetNameFromReference()
-        {
-            var book1 = NewBook("Book 1");
-            book1.ChangeName("New name");
+        public delegate string WriteLogDelegate(string logMessage);
 
-            Assert.Equal("New name",
-                         book1.GetName());
+        int count = 0;
+
+        [Fact]
+        public void WritingLogDelegateCanPointToMethod()
+        {
+            WriteLogDelegate log = ReturnMessage;
+            log += ReturnMessage;
+            log += IncreaseCount;
+
+            var result = log("Hello, World!");
+            Assert.Equal(3, count);
+        }
+
+        string IncreaseCount(string message)
+        {
+            count++;
+            return message.ToLower();
+        }
+
+        string ReturnMessage(string message)
+        {
+            count++;
+            return message;
         }
 
         private Book NewBook(string name)
@@ -26,8 +43,8 @@ namespace GradeBook.Tests
             var book1 = GetBook("Book 1");
             var book2 = GetBook("Book 2");
 
-            Assert.Equal("Book 1", book1.GetName());
-            Assert.Equal("Book 2", book2.GetName());
+            Assert.Equal("Book 1", book1.Name);
+            Assert.Equal("Book 2", book2.Name);
         }
 
         [Fact]

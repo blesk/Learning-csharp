@@ -8,17 +8,46 @@ namespace GradeBook
     {
         static void Main(string[] args)
         {
-            var book = new Book("Confederacy of Dunces");
-            book.AddGrade(98.2);
-            book.AddGrade(18.3);
-            book.AddGrade(99.9);
+            Console.Write("Enter book name: ");
+            string name = Console.ReadLine();
+            var book = new Book(name);
+
+            book.GradeAdded += OnGradeAdded;
+
+            while (true)
+            {
+                Console.Write("Please enter grade or 'q' to quit: ");
+                string grade = Console.ReadLine();
+                
+                if (grade == "Q" || grade == "q")
+                    break;
+                try
+                {
+                    var numGrade = double.Parse(grade);
+                    book.AddGrade(numGrade);
+                }
+                catch(ArgumentException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                catch(FormatException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
 
             var stats = book.GetStatistics();
 
-            Console.WriteLine($"Statistics for: {book.GetName()}");
-            Console.WriteLine($"Average:{stats.Average:N3}");
-            Console.WriteLine($"High:   {stats.High}");
-            Console.WriteLine($"Low:    {stats.Low}");
+            Console.WriteLine($"Statistics for: {book.Name}");
+            Console.WriteLine($"Average:        {stats.Average:N3}");
+            Console.WriteLine($"High:           {stats.High}");
+            Console.WriteLine($"Low:            {stats.Low}");
+            Console.WriteLine($"The letter is:  {stats.Letter}");
+        }
+
+        static void OnGradeAdded(object sender, EventArgs e)
+        {
+            Console.WriteLine("A grade was added"); 
         }
     }
 }

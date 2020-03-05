@@ -3,22 +3,34 @@ using System;
 
 namespace GradeBook
 {
-    public class Book
+    public class Book : NamedObject
     {
-        public Book(string name)
+        public Book(string name) : base(name)
         {
             grades = new List<double>();
-            this.name = name;
         }
         public void AddGrade(double grade)
         {
-            grades.Add(grade);
+            if (grade <= 100 && grade >= 0)
+            {
+                grades.Add(grade);
+                if (GradeAdded != null)
+                {
+                    GradeAdded(this, new EventArgs());
+                }
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid {nameof(grade)}");
+            }
         }
 
+        public event GradeAddedDelegate GradeAdded;
+        
         public double GetLowestGrade()
         {
             var result = double.MaxValue;
-            foreach(double i in grades)
+            foreach (double i in grades)
             {
                 result = Math.Min(i, result);
             }
@@ -39,7 +51,7 @@ namespace GradeBook
         {
             var avg = 0.0;
 
-            foreach(double i in grades)
+            foreach (double i in grades)
             {
                 avg += i;
             }
@@ -54,18 +66,32 @@ namespace GradeBook
             result.Average = GetAverageGrade();
             result.Low = GetLowestGrade();
             result.High = GetHighestGrade();
+            result.Letter = AddLetter(result.Average);
 
             return result;
         }
 
-        public string GetName()
+        private char AddLetter(double average)
         {
-            return name;
+            switch (average)
+            {
+                case var d when d >= 90:
+                    return 'A';
+                    
+                case var d when d >= 80:
+                    return 'B';
+                    
+                case var d when d >= 70:
+                    return 'C';
+                    
+                case var d when d >= 60:
+                    return 'D';
+                    
+                default:
+                    return 'F';
+            }
         }
 
-        public void ChangeName(string name) => this.name = name;
-
         List<double> grades;
-        private string name;
     }
 }
