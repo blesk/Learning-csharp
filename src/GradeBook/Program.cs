@@ -10,7 +10,7 @@ namespace GradeBook
         {
             Console.Write("Enter book name: ");
             string name = Console.ReadLine();
-            var book = new Book(name);
+            IBook book = new DiskBook(name);
 
             book.GradeAdded += OnGradeAdded;
 
