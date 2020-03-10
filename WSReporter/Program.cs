@@ -2,8 +2,6 @@
 using System.IO;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using System.Data;
-using System.Text.Json;
 
 namespace WSReporter
 {
@@ -12,43 +10,109 @@ namespace WSReporter
 
         static void Main(string[] args)
         {
-            string path = "../../data/two.json";
-            //string fileContent = "{'libraries':[{'keyUuid':'717c66cb-5229-495a-983f-8deec79d573b','type':'.NET','productName':'NPM - latest','projectName':'wireless.heatmaps - latest','description':'ServiceStack.Text','directDependency':true,'matchType':'Exact Match','sha1':'4889d31b0c3a406e88f19d47aa180722bf69a4f0','name':'ServiceStack.Text-3.8.3.0.dll','artifactId':'ServiceStack.Text-3.8.3.0.dll','version':'3.8.3.0','groupId':'ServiceStack.Text','licenses':[{'name':'AGPL 3.0','references':[]}]},{'keyUuid':'efcf504d-403b-43d2-819d-57acf7402037','type':'Nuget','productName':'NPM - latest','projectName':'nexus - latest','description':'A very extensive set of extension methods that allow you to more naturally specify the expected outc...','directDependency':true,'matchType':'Exact Match','sha1':'f20766c716e9a46771ff5b9328e43c0a858ff565','name':'fluentassertions.4.19.4.nupkg','artifactId':'fluentassertions.4.19.4.nupkg','version':'4.19.4','groupId':'FluentAssertions','licenses':[{'name':'Apache 2.0','references':[]}]}}";
-            //const string path = "../../data/NPM-latest.json";
+            if (args.Length < 1) {
+                Console.WriteLine("Please add path to JSON file as a parameter.");
+                System.Environment.Exit(1);
+            }
+            string path = args[0];
+            
             string fileContent = File.ReadAllText(path);
 
-            //Dictionary<String, List<WSLibrary>> libs = 
-            //    JsonConvert.DeserializeObject<Dictionary<String, List<WSLibrary>>>(File.ReadAllText(path));
+            List<WSLibrary> libraries = new List<WSLibrary>();
+            
             JsonTextReader reader = new JsonTextReader(new StringReader(fileContent));
             while (reader.Read())
             {
-                
-                if (reader.Value != null)
+                if (reader.TokenType == JsonToken.StartObject)
                 {
-                    Console.WriteLine("Token: {0}, Value: {1}", reader.TokenType, reader.Value);
-                }
-                else
-                {
-                    Console.WriteLine("Token: {0}", reader.TokenType);
+                    if (reader.Read()){
+                        if((string)reader.Value != "libraries")
+                        {
+                            libraries.Add(GetWSLibrary(reader));
+                        }
+                    } 
+                    else 
+                    {
+                        break;
+                    }
+
                 }
             }
 
-
-
-            //DataTable libsTable = libs.Tables["libraries"];
-            //Console.WriteLine(libsTable.Rows.Count);
-            // dynamic libs = JsonConvert.DeserializeObject<JsonArrayAttribute>(File.ReadAllText(path));
-
-            //var libs = JsonSerializer.DeserializeObject
-
-            /*
-                        foreach (dynamic entry in libs) {
-                            string name = entry.name;
-                            Console.WriteLine(name);
-                        }
-            */
-            // Console.WriteLine(libs);
-
+            foreach (var library in libraries)
+            {
+                if (library.DirectDependency && library.Type != "Nuget")
+                {
+                    Console.WriteLine($"{library.Name}: Version: {library.Version} Type: {library.Type}");
+                }
+            }
         }
+
+        private static WSLibrary GetWSLibrary(JsonTextReader reader)
+        {
+            var lib = new WSLibrary();
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonToken.EndObject)
+                {
+                    break;
+                }
+
+                if (reader.TokenType == JsonToken.PropertyName)
+                {
+                    switch ((string)reader.Value)
+                    {
+                        case "type":
+                            reader.Read();
+                            lib.Type = (string)reader.Value;
+                            break;
+
+                        case "productName":
+                            reader.Read();
+                            lib.ProductName = (string)reader.Value;
+                            break;
+
+                        case "projectName":
+                            reader.Read();
+                            lib.ProjectName = (string)reader.Value;
+                            break;
+
+                        case "directDependency":
+                            reader.Read();
+                            lib.DirectDependency = (bool)reader.Value;
+                            break;
+
+                        case "name":
+                            reader.Read();
+                            lib.Name = (string)reader.Value;
+                            break;
+
+                        case "version":
+                            reader.Read();
+                            lib.Version = (string)reader.Value;
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                }
+
+                // get rid of licenses for now
+                if (reader.TokenType == JsonToken.StartObject)
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == JsonToken.EndObject)
+                        {
+                            break;
+                        }
+                    }
+                } 
+            }
+            return lib;
+        }
+
+
     }
 }
